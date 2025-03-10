@@ -33,6 +33,15 @@ func (h *AuthHandler) Register() http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
-		res.Json(w, body, http.StatusOK)
+		user, err := h.AuthService.Register(body.Email, body.Password, body.Username)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusUnauthorized)
+			return
+		}
+		data := RegisterResponse{
+			Email:    user.Email,
+			Username: user.Username,
+		}
+		res.Json(w, data, http.StatusCreated)
 	}
 }
