@@ -1,6 +1,11 @@
 package cfg
 
-import "github.com/joho/godotenv"
+import (
+	"log"
+	"os"
+
+	"github.com/joho/godotenv"
+)
 
 type Config struct {
 	Db   DbConfig
@@ -16,5 +21,16 @@ type AuthConfig struct {
 }
 
 func LoadConfig() *Config {
-	err := godotenv
+	err := godotenv.Load()
+	if err != nil {
+		log.Println("Error while loading .env file")
+	}
+	return &Config{
+		Db: DbConfig{
+			Dsn: os.Getenv("DSN"),
+		},
+		Auth: AuthConfig{
+			Secret: os.Getenv("SECRET"),
+		},
+	}
 }
