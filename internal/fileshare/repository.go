@@ -1,6 +1,8 @@
 package fileshare
 
-import "go-api/pkg/db"
+import (
+	"go-api/pkg/db"
+)
 
 type FileshareRepository struct {
 	Database *db.DB
@@ -16,4 +18,13 @@ func (r *FileshareRepository) CreateFile(file *File) error {
 		return result.Error
 	}
 	return nil
+}
+
+func (r *FileshareRepository) GetFileByHash(hash string) (*File, error) {
+	var file File
+	result := r.Database.DB.Where("hash = ?", hash).First(&file)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return &file, nil
 }
