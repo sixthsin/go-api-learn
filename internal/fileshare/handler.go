@@ -1,6 +1,7 @@
 package fileshare
 
 import (
+	"fmt"
 	"go-api/cfg"
 	"go-api/pkg/middleware"
 	"go-api/pkg/res"
@@ -42,7 +43,21 @@ func (h *FileShareHandler) Upload() http.HandlerFunc {
 			return
 		}
 		defer file.Close()
-		err = h.FileShareService.SaveFile(file, fileHandler.Filename)
+		emailValue := r.Context().Value(middleware.ContextEmailKey)
+		fmt.Println(emailValue)
+		email, ok := emailValue.(string)
+		if !ok {
+			http.Error(w, "email not found", http.StatusInternalServerError)
+			return
+		}
+		user, err := h.FileShareService.SaveFile(file, fileHandler.Filename, email)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		createdFile := NewFile(fileHandler.Filename, fileHandler.Size, user.ID)
+		createdFile.GenerateHash()
+		err = h.FileShareService.CreateFile(createdFile)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
