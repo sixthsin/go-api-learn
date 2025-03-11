@@ -3,10 +3,10 @@ package user
 import "go-api/pkg/db"
 
 type UserRepository struct {
-	Database *db.Db
+	Database *db.DB
 }
 
-func NewUserRepository(db *db.Db) *UserRepository {
+func NewUserRepository(db *db.DB) *UserRepository {
 	return &UserRepository{Database: db}
 }
 
