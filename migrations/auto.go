@@ -1,6 +1,7 @@
 package main
 
 import (
+	"go-api/internal/fileshare"
 	"go-api/internal/user"
 	"os"
 
@@ -18,5 +19,5 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	db.AutoMigrate(&user.User{})
+	db.AutoMigrate(&user.User{}, &fileshare.File{})
 }

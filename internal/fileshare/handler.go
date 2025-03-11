@@ -1,13 +1,11 @@
 package fileshare
 
 import (
+	"fmt"
 	"go-api/cfg"
 	"go-api/pkg/middleware"
 	"go-api/pkg/res"
-	"io"
 	"net/http"
-	"os"
-	"path/filepath"
 )
 
 const (
@@ -29,10 +27,10 @@ func NewFileShareHandler(router *http.ServeMux, deps FileshareHandlerDeps) {
 		Config:           deps.Config,
 		FileShareService: deps.FileShareService,
 	}
-	router.Handle("POST /file/upload", middleware.IsAuthed(handler.UploadFile(), deps.Config))
+	router.Handle("POST /file/upload", middleware.IsAuthed(handler.Upload(), deps.Config))
 }
 
-func (h *FileShareHandler) UploadFile() http.HandlerFunc {
+func (h *FileShareHandler) Upload() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		err := r.ParseMultipartForm(10 << 20)
 		if err != nil {
@@ -45,14 +43,22 @@ func (h *FileShareHandler) UploadFile() http.HandlerFunc {
 			return
 		}
 		defer file.Close()
-		filePath := filepath.Join(h.Config.Storage.Path, fileHandler.Filename)
-		dst, err := os.Create(filePath)
+		emailValue := r.Context().Value(middleware.ContextEmailKey)
+		fmt.Println(emailValue)
+		email, ok := emailValue.(string)
+		if !ok {
+			http.Error(w, "email not found", http.StatusInternalServerError)
+			return
+		}
+		user, err := h.FileShareService.SaveFile(file, fileHandler.Filename, email)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		defer dst.Close()
-		if _, err := io.Copy(dst, file); err != nil {
+		createdFile := NewFile(fileHandler.Filename, fileHandler.Size, user.ID)
+		createdFile.GenerateHash()
+		err = h.FileShareService.CreateFile(createdFile)
+		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
