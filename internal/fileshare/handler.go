@@ -2,11 +2,16 @@ package fileshare
 
 import (
 	"go-api/cfg"
+	"go-api/pkg/middleware"
 	"go-api/pkg/res"
 	"io"
 	"net/http"
 	"os"
 	"path/filepath"
+)
+
+const (
+	MsgSuccessfullyUpload = "file uploaded successfully"
 )
 
 type FileShareHandler struct {
@@ -24,7 +29,7 @@ func NewFileShareHandler(router *http.ServeMux, deps FileshareHandlerDeps) {
 		Config:           deps.Config,
 		FileShareService: deps.FileShareService,
 	}
-	router.HandleFunc("POST /file/upload", handler.UploadFile())
+	router.Handle("POST /file/upload", middleware.IsAuthed(handler.UploadFile(), deps.Config))
 }
 
 func (h *FileShareHandler) UploadFile() http.HandlerFunc {
@@ -51,6 +56,6 @@ func (h *FileShareHandler) UploadFile() http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		res.Json(w, fileHandler.Filename+"uploaded successfully", http.StatusOK)
+		res.Json(w, MsgSuccessfullyUpload, http.StatusOK)
 	}
 }
