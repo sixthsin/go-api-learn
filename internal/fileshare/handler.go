@@ -26,10 +26,10 @@ func NewFileShareHandler(router *http.ServeMux, deps FileshareHandlerDeps) {
 		Config:           deps.Config,
 		FileShareService: deps.FileShareService,
 	}
-	router.Handle("POST /file/upload", middleware.IsAuthed(handler.UploadFile(), deps.Config))
+	router.Handle("POST /file/upload", middleware.IsAuthed(handler.Upload(), deps.Config))
 }
 
-func (h *FileShareHandler) UploadFile() http.HandlerFunc {
+func (h *FileShareHandler) Upload() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		err := r.ParseMultipartForm(10 << 20)
 		if err != nil {
