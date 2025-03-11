@@ -6,6 +6,7 @@ import (
 	"go-api/pkg/middleware"
 	"go-api/pkg/res"
 	"net/http"
+	"path/filepath"
 )
 
 const (
@@ -28,6 +29,7 @@ func NewFileShareHandler(router *http.ServeMux, deps FileshareHandlerDeps) {
 		FileShareService: deps.FileShareService,
 	}
 	router.Handle("POST /file/upload", middleware.IsAuthed(handler.Upload(), deps.Config))
+	router.Handle("GET /file/download/{hash}", middleware.IsAuthed(handler.Download(), deps.Config))
 }
 
 func (h *FileShareHandler) Upload() http.HandlerFunc {
@@ -63,5 +65,20 @@ func (h *FileShareHandler) Upload() http.HandlerFunc {
 			return
 		}
 		res.Json(w, MsgSuccessfullyUpload, http.StatusOK)
+	}
+}
+
+func (h *FileShareHandler) Download() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		hash := r.PathValue("hash")
+		file, err := h.FileShareService.GetFileByHash(hash)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		filePath := filepath.Join(h.Config.Storage.Path, file.Filename)
+		w.Header().Set("Content-Disposition", "attachment; filename="+file.Filename)
+		w.Header().Set("Content-Type", "application/octet-stream")
+		http.ServeFile(w, r, filePath)
 	}
 }

@@ -38,3 +38,11 @@ func (s *FileShareService) SaveFile(file io.Reader, filename string, email strin
 	}
 	return user, nil
 }
+
+func (s *FileShareService) GetFileByHash(hash string) (*File, error) {
+	file, err := s.FileshareRepository.GetFileByHash(hash)
+	if err != nil {
+		return nil, err
+	}
+	return file, nil
+}
