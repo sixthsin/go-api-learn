@@ -39,3 +39,15 @@ func (s *AuthService) Register(email, password, username string) (*user.User, er
 	}
 	return user, nil
 }
+
+func (s *AuthService) Login(email, password string) (string, error) {
+	existedUser, _ := s.UserRepository.FindByEmail(email)
+	if existedUser == nil {
+		return "", errors.New(ErrWrongCredentials)
+	}
+	err := bcrypt.CompareHashAndPassword([]byte(existedUser.Password), []byte(password))
+	if err != nil {
+		return "", errors.New(ErrWrongCredentials)
+	}
+	return existedUser.Email, nil
+}

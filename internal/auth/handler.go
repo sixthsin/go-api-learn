@@ -23,7 +23,7 @@ func NewAuthHandler(router *http.ServeMux, deps AuthHandlerDeps) {
 		Config:      deps.Config,
 		AuthService: deps.AuthService,
 	}
-	// router.HandleFunc("POST /auth/login", handler.Login())
+	router.HandleFunc("POST /auth/login", handler.Login())
 	router.HandleFunc("POST /auth/register", handler.Register())
 }
 
@@ -36,22 +36,51 @@ func (h *AuthHandler) Register() http.HandlerFunc {
 		}
 		user, err := h.AuthService.Register(body.Email, body.Password, body.Username)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusUnauthorized)
+			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 		token, err := jwt.NewJWT(h.Config.Auth.Secret).Create(jwt.JWTData{
-			Email:    body.Email,
-			Username: body.Username,
+			Email: body.Email,
 		})
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		data := RegisterResponse{
-			Token:    token,
-			Email:    user.Email,
-			Username: user.Username,
+		res.Json(w,
+			RegisterResponse{
+				Token:    token,
+				Email:    user.Email,
+				Username: user.Username,
+			},
+			http.StatusCreated,
+		)
+	}
+}
+
+func (h *AuthHandler) Login() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		body, err := req.HandleBody[LoginRequest](&w, r)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
 		}
-		res.Json(w, data, http.StatusCreated)
+		userEmail, err := h.AuthService.Login(body.Email, body.Password)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		token, err := jwt.NewJWT(h.Config.Auth.Secret).Create(jwt.JWTData{
+			Email: userEmail,
+		})
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		res.Json(w,
+			LoginResponse{
+				Token: token,
+			},
+			http.StatusOK,
+		)
 	}
 }
