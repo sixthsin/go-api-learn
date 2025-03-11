@@ -8,8 +8,9 @@ import (
 )
 
 type Config struct {
-	Db   DbConfig
-	Auth AuthConfig
+	Db      DbConfig
+	Auth    AuthConfig
+	Storage StorageConfig
 }
 
 type DbConfig struct {
@@ -18,6 +19,10 @@ type DbConfig struct {
 
 type AuthConfig struct {
 	Secret string
+}
+
+type StorageConfig struct {
+	Path string
 }
 
 func LoadConfig() *Config {
@@ -31,6 +36,9 @@ func LoadConfig() *Config {
 		},
 		Auth: AuthConfig{
 			Secret: os.Getenv("SECRET"),
+		},
+		Storage: StorageConfig{
+			Path: os.Getenv("STORAGE_PATH"),
 		},
 	}
 }
