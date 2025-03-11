@@ -24,7 +24,7 @@ func main() {
 
 	// Services
 	authService := auth.NewAuthSrevice(userRepository)
-	fileshareService := fileshare.NewFileShareService(fileshareRepository)
+	fileshareService := fileshare.NewFileShareService(fileshareRepository, config)
 
 	// Handlers
 	auth.NewAuthHandler(router, auth.AuthHandlerDeps{

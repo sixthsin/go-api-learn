@@ -4,10 +4,7 @@ import (
 	"go-api/cfg"
 	"go-api/pkg/middleware"
 	"go-api/pkg/res"
-	"io"
 	"net/http"
-	"os"
-	"path/filepath"
 )
 
 const (
@@ -45,14 +42,8 @@ func (h *FileShareHandler) UploadFile() http.HandlerFunc {
 			return
 		}
 		defer file.Close()
-		filePath := filepath.Join(h.Config.Storage.Path, fileHandler.Filename)
-		dst, err := os.Create(filePath)
+		err = h.FileShareService.SaveFile(file, fileHandler.Filename)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		defer dst.Close()
-		if _, err := io.Copy(dst, file); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
